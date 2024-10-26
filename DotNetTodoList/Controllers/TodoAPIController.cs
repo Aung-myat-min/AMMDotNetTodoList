@@ -14,6 +14,7 @@ namespace DotNetTodoList.Controllers
     {
         private readonly string _connectionString = "Data Source=DESKTOP-KPCHONN\\SQLEXPRESS;Initial Catalog=DotNetToDoList;User ID=sa;Password=sasa@123;TrustServerCertificate=True;";
         readonly List<string> status = new List<string> { "Pending", "In Progress", "Completed", "Overdue" };
+
         [HttpGet]
         public IActionResult GetTodos()
         {
@@ -215,6 +216,49 @@ namespace DotNetTodoList.Controllers
 
                 return Ok($"Your Todo is created with ID: {insertedId}");
             }
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpgradeTodo(int id, TodoViewModel todo)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than 0 or Negative");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            String query = @"UPDATE [dbo].[ToDoList]
+                           SET [TaskTitle] = @TaskTitle
+                              ,[TaskDescription] = @TaskDescription
+                              ,[CategoryID] = @CategoryId
+                              ,[PriorityLevel] = @PriorityLevel
+                              ,[Status] = @Status
+                              ,[DueDate] = @DueDate
+                              ,[CreatedDate] = @CreatedDate
+                         WHERE TaskID = @id";
+
+            SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@TaskTitle", todo.Title);
+            cmd.Parameters.AddWithValue("@TaskDescription", todo.Description);
+            cmd.Parameters.AddWithValue("@CategoryId", todo.IDCategory);
+            cmd.Parameters.AddWithValue("@PriorityLevel", todo.Level);
+            cmd.Parameters.AddWithValue("@Status", todo.TodoStatus);
+            cmd.Parameters.AddWithValue("@DueDate", todo.TodoDueDate);
+            cmd.Parameters.AddWithValue("@CreatedDate", todo.TodoCreatedDate);
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if (result == 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internel Server Occured!");
+            }
+
+            return Ok("Todo Updated!");
         }
     }
 }
