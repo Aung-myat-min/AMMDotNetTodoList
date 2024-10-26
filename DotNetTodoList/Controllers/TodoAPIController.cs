@@ -218,6 +218,12 @@ namespace DotNetTodoList.Controllers
             }
         }
 
+        /// <summary>
+        /// This PUT method can't update the Complete Date!
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="todo"></param>
+        /// <returns></returns>
         [HttpPut("{id}")]
         public IActionResult UpgradeTodo(int id, TodoViewModel todo)
         {
@@ -259,6 +265,33 @@ namespace DotNetTodoList.Controllers
             }
 
             return Ok("Todo Updated!");
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteTodo(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than 0");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            String query = @"DELETE FROM [dbo].[ToDoList]
+                            WHERE TaskID = @id";
+            SqlCommand cmd = new SqlCommand(query, connection);
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if (result == 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error!");
+            }
+
+            return Ok("Todo Deleted!");
         }
     }
 }
