@@ -77,5 +77,37 @@ namespace DotNetTodoList.Controllers
 
             return Ok(category);
         }
+
+        [HttpPost]
+        public IActionResult CreateCategory(CategoryViewModel category)
+        {
+            if (string.IsNullOrEmpty(category.Name))
+            {
+                return BadRequest("Name can't be null or empty.");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            string query = @"INSERT INTO [dbo].[TaskCategory]
+                               ([CategoryName])
+                        OUTPUT INSERTED.CategoryID
+                         VALUES
+                               (@name)";
+
+            SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@name", category.Name);
+
+            object insertedId = cmd.ExecuteScalar();
+
+            connection.Close();
+
+            if (insertedId is null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error!");
+            }
+
+            return Ok($"Your Category is created with ID: {insertedId}");
+        }
     }
 }
