@@ -109,5 +109,73 @@ namespace DotNetTodoList.Controllers
 
             return Ok($"Your Category is created with ID: {insertedId}");
         }
+
+        [HttpPut("{id}")]
+        public IActionResult UpgradeCategory(int id, CategoryViewModel category)
+        {
+            if(id <= 0)
+            {
+                return BadRequest("Id can't be less than or equal to 0");
+            }
+            if (string.IsNullOrEmpty(category.Name))
+            {
+                return BadRequest("Name can't be null or empty");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            string query = @"UPDATE [dbo].[TaskCategory]
+                           SET [CategoryName] = @name
+                         WHERE CategoryID = @id";
+            SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", category.Name);
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if(result == 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error!");
+            }
+
+            return Ok("The category has been updated!");
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult UpdateCategory(int id, CategoryViewModel category)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than or equal to 0");
+            }
+            if (string.IsNullOrEmpty(category.Name))
+            {
+                return BadRequest("Name can't be null or empty");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            string query = @"UPDATE [dbo].[TaskCategory]
+                           SET [CategoryName] = @name
+                         WHERE CategoryID = @id";
+            SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", category.Name);
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if (result == 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error!");
+            }
+
+            return Ok("The category has been updated!");
+        }
     }
 }
