@@ -177,5 +177,34 @@ namespace DotNetTodoList.Controllers
 
             return Ok("The category has been updated!");
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCategory(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than or equal to 0");
+            }
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            string query = @"DELETE FROM [dbo].[TaskCategory]
+                                WHERE CategoryID = @id";
+
+            SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if(result == 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error!");
+            }
+
+            return Ok("Category Deleted!");
+        }
     }
 }
