@@ -16,7 +16,7 @@ namespace DotNetTodoList.Controllers
         readonly List<string> status = new List<string> { "Pending", "In Progress", "Completed", "Overdue" };
 
         [HttpGet]
-        public IActionResult GetTodos()
+        public IActionResult GetTodos(string sort = null)
         {
             List<TodoViewModel> todos = new List<TodoViewModel>();
 
@@ -30,6 +30,16 @@ namespace DotNetTodoList.Controllers
                               ,[CreatedDate]
                               ,[CompletedDate]
                           FROM [dbo].[ToDoList]";
+
+            switch (sort)
+            {
+                case "duedate":
+                    query += "ORDER BY DueDate DESC";
+                    break;
+                case "level":
+                    query += "ORDER BY PriorityLevel DESC";
+                    break;
+            }
 
             SqlConnection connection = new SqlConnection(_connectionString);
             connection.Open();
