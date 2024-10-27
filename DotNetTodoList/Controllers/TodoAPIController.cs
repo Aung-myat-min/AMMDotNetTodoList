@@ -325,6 +325,11 @@ namespace DotNetTodoList.Controllers
             if (!(todo.TodoCompletedDate is null))
             {
                 variables += "[CompletedDate] = @CompletedDate, ";
+                if (todo.TodoStatus is null)
+                {
+                    variables += "[Status] = @Status, ";
+                }
+                todo.TodoStatus = "Completed";
             }
 
             variables = variables.Substring(0, variables.Length - 2);
@@ -371,6 +376,7 @@ namespace DotNetTodoList.Controllers
             {
                 cmd.Parameters.AddWithValue("@CompletedDate", todo.TodoCompletedDate);
             }
+            cmd.Parameters.AddWithValue("@id", id);
 
             int result = cmd.ExecuteNonQuery();
 
@@ -412,4 +418,50 @@ namespace DotNetTodoList.Controllers
             return Ok("Todo Deleted!");
         }
     }
+
+    [Route("api/complete/[controller]")]
+    [ApiController]
+    public class TodoAPICompleteController : ControllerBase
+    {
+        private readonly string _connectionString = "Data Source=DESKTOP-KPCHONN\\SQLEXPRESS;Initial Catalog=DotNetToDoList;User ID=sa;Password=sasa@123;TrustServerCertificate=True;";
+
+        [HttpPost("{id}")]
+        public IActionResult MarkTodoComplete(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than or equal to 0.");
+            }
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                DateTime completedDate = DateTime.Now;
+                string status = "Completed";
+
+                string query = @"UPDATE [dbo].[ToDoList]
+                             SET [Status] = @status,
+                                 [CompletedDate] = @completedDate
+                             WHERE TaskID = @id";
+
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@status", status);
+                    cmd.Parameters.AddWithValue("@completedDate", completedDate);
+                    cmd.Parameters.AddWithValue("@id", id);
+
+                    int result = cmd.ExecuteNonQuery();
+
+                    if (result == 0)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, "Failed to mark the task as completed. Task ID may not exist.");
+                    }
+                }
+            }
+
+            return Ok("Todo is marked as Completed!");
+        }
+    }
+
 }
