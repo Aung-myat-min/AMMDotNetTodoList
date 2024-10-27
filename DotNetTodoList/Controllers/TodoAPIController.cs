@@ -267,6 +267,123 @@ namespace DotNetTodoList.Controllers
             return Ok("Todo Updated!");
         }
 
+        [HttpPatch("{id}")]
+        public IActionResult UpdateTodo(int id, TodoViewModel todo)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id can't be less than 0");
+            }
+
+            String variables = "";
+
+            if (!(todo.Title is null))
+            {
+                variables += "[TaskTitle] = @TaskTitle, ";
+            }
+            if (!(todo.Description is null))
+            {
+                variables += "[TaskDescription] = @TaskDescription, ";
+            }
+            if (!(todo.IDCategory is null))
+            {
+                if (todo.IDCategory <= 0)
+                {
+                    return BadRequest("Invalid Category Id!");
+                }
+                variables += "[CategoryID] = @CategoryId, ";
+            }
+            if (!(todo.Level is null))
+            {
+                if (todo.Level < 0 || todo.Level > 5)
+                {
+                    return BadRequest("Invalid Priority Level!");
+                }
+
+                variables += "[PriorityLevel] = @PriorityLevel, ";
+            }
+            if (!(todo.TodoStatus is null))
+            {
+                if (!(status.Contains(todo.TodoStatus)))
+                {
+                    return BadRequest("Invalid Status! Status should be one of 'Pending', 'In Progress', 'Completed', 'Overdue'");
+                }
+                variables += "[Status] = @Status, ";
+            }
+            if (!(todo.TodoDueDate is null))
+            {
+                //if (DateTime.TryParse(todo.TodoDueDate.ToString()))
+                //{
+                //    return BadRequest("Invalid Due Date!");
+                //}
+                variables += "[DueDate] = @DueDate, ";
+            }
+            if (!(todo.TodoCreatedDate is null))
+            {
+                variables += "[CreatedDate] = @CreatedDate, ";
+            }
+            if (!(todo.TodoCompletedDate is null))
+            {
+                variables += "[CompletedDate] = @CompletedDate, ";
+            }
+
+            variables = variables.Substring(0, variables.Length - 2);
+
+            String query = @$"UPDATE [dbo].[ToDoList]
+                           SET {variables}
+                         WHERE TaskID = @id";
+
+            SqlConnection connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+
+            SqlCommand cmd = new SqlCommand(query, connection);
+            if (!(todo.Title is null))
+            {
+                cmd.Parameters.AddWithValue("@TaskTitle", todo.Title);
+            }
+            if (!(todo.Description is null))
+            {
+                cmd.Parameters.AddWithValue("@TaskDescription", todo.Description);
+            }
+            if (!(todo.IDCategory is null))
+            {
+                cmd.Parameters.AddWithValue("@CategoryId", todo.IDCategory);
+            }
+            if (!(todo.Level is null))
+            {
+                cmd.Parameters.AddWithValue("@PriorityLevel", todo.Level);
+            }
+            if (!(todo.TodoStatus is null))
+            {
+                cmd.Parameters.AddWithValue("@Status", todo.TodoStatus);
+
+            }
+            if (!(todo.TodoDueDate is null))
+            {
+                cmd.Parameters.AddWithValue("@DueDate", todo.TodoDueDate);
+            }
+            if (!(todo.TodoCreatedDate is null))
+            {
+                cmd.Parameters.AddWithValue("@CreatedDate", todo.TodoCreatedDate);
+            }
+            if (!(todo.TodoCompletedDate is null))
+            {
+                cmd.Parameters.AddWithValue("@CompletedDate", todo.TodoCompletedDate);
+            }
+
+            int result = cmd.ExecuteNonQuery();
+
+            connection.Close();
+
+            if (result == 0)
+            {
+                return BadRequest("Internal Server Error!");
+            }
+
+            return Ok("Your Todo has been updated!");
+        }
+
         [HttpDelete("{id}")]
         public IActionResult DeleteTodo(int id)
         {
@@ -281,6 +398,7 @@ namespace DotNetTodoList.Controllers
             String query = @"DELETE FROM [dbo].[ToDoList]
                             WHERE TaskID = @id";
             SqlCommand cmd = new SqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@id", id);
 
             int result = cmd.ExecuteNonQuery();
 
